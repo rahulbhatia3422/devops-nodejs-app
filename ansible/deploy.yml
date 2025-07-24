@@ -1,0 +1,67 @@
+---
+- name: Deploy Docker container on EC2
+  hosts: ec2
+  become: yes
+  vars:
+    IMAGE: "rahul0315/devops-nodejs-app:{{ GIT_COMMIT }}"
+    CONTAINER_NAME: devops-app
+    APP_PORT: 3000  # Internal container port
+  tasks:
+
+    - name: Update APT packages
+      apt:
+        update_cache: yes
+        force_apt_get: yes
+
+    - name: Install dependencies
+      apt:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - apt-transport-https
+        - ca-certificates
+        - curl
+        - gnupg
+        - lsb-release
+
+    - name: Add Docker GPG key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add Docker repository
+      apt_repository:
+        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+        state: present
+
+    - name: Install Docker Engine
+      apt:
+        name: docker-ce
+        state: latest
+        update_cache: yes
+
+    - name: Start Docker service
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Pull latest Docker image
+      docker_image:
+        name: "{{ IMAGE }}"
+        source: pull
+
+    - name: Stop and remove old container (if exists)
+      docker_container:
+        name: "{{ CONTAINER_NAME }}"
+        state: absent
+        force_kill: yes
+
+    - name: Run container with latest image
+      docker_container:
+        name: "{{ CONTAINER_NAME }}"
+        image: "{{ IMAGE }}"
+        state: started
+        restart_policy: always
+        ports:
+          - "80:{{ APP_PORT }}"  # Maps host port 80 to container port 3000
