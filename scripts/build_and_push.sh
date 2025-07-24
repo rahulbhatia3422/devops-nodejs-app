@@ -8,13 +8,11 @@ GIT_COMMIT=$(git rev-parse --short HEAD)
 IMAGE="rahul0315/devops-nodejs-app:$GIT_COMMIT"
 
 echo "[INFO] Building Docker image: $IMAGE"
-docker build -t $IMAGE ..
-
-echo "[INFO] Logging into DockerHub..."
-docker login
+docker build -t $IMAGE .
 
 echo "[INFO] Pushing image to DockerHub: $IMAGE"
 docker push $IMAGE
 
 echo "[SUCCESS] Image pushed: $IMAGE"
+
 
