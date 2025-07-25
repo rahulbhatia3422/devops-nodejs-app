@@ -40,11 +40,17 @@
         state: present
         filename: docker
 
-    - name: Install Docker Engine
+    - name: Check if Docker is already installed
+      command: docker --version
+      register: docker_check
+      ignore_errors: yes
+
+    - name: Install Docker Engine (only if not installed)
       apt:
         name: docker-ce
         state: latest
         update_cache: yes
+      when: docker_check.rc != 0
 
     - name: Ensure Docker is running
       service:
@@ -84,4 +90,4 @@
         ports:
           - "80:{{ APP_PORT }}"
         env:
-          NODE_ENV: production
+          NODE_ENV: production
