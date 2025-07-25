@@ -4,6 +4,7 @@ const port = 3000;
 
 app.get('/', (req, res) => {
   res.send('Hello from DevOps Node.js app!');
+  res.send('Hello I am Rahul...');
 });
 
 app.listen(port, () => {
