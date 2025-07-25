@@ -2,18 +2,20 @@
 - name: Deploy Docker container on EC2
   hosts: ec2
   become: yes
+
   vars:
     IMAGE: "rahul0315/devops-nodejs-app:{{ GIT_COMMIT | default('latest') }}"
     CONTAINER_NAME: devops-app
     APP_PORT: 3000
+
   tasks:
 
-    - name: Update APT packages
+    - name: Update APT package cache
       apt:
         update_cache: yes
         force_apt_get: yes
 
-    - name: Install dependencies
+    - name: Install required system packages
       apt:
         name: "{{ item }}"
         state: present
@@ -24,15 +26,19 @@
         - gnupg
         - lsb-release
 
-    - name: Add Docker GPG key
-      apt_key:
+    - name: Add Docker’s official GPG key
+      get_url:
         url: https://download.docker.com/linux/ubuntu/gpg
-        state: present
+        dest: /etc/apt/keyrings/docker.gpg
+        mode: '0644'
 
-    - name: Add Docker repository
+    - name: Set up the Docker repository
       apt_repository:
-        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+        repo: >
+          deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] 
+          https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable
         state: present
+        filename: docker
 
     - name: Install Docker Engine
       apt:
@@ -40,24 +46,36 @@
         state: latest
         update_cache: yes
 
-    - name: Start Docker service
+    - name: Ensure Docker is running
       service:
         name: docker
         state: started
         enabled: yes
 
-    - name: Pull latest Docker image
-      docker_image:
-        name: "{{ IMAGE }}"
-        source: pull
+    - name: Try pulling tagged Docker image (with fallback)
+      block:
+        - name: Pull Docker image with tag
+          docker_image:
+            name: "{{ IMAGE }}"
+            source: pull
+      rescue:
+        - name: Log warning and pull latest instead
+          debug:
+            msg: "Tag {{ IMAGE }} not found. Pulling latest..."
+        - name: Pull latest tag as fallback
+          docker_image:
+            name: "rahul0315/devops-nodejs-app:latest"
+            source: pull
+        - set_fact:
+            IMAGE: "rahul0315/devops-nodejs-app:latest"
 
-    - name: Stop and remove old container (if exists)
+    - name: Stop and remove old container if exists
       docker_container:
         name: "{{ CONTAINER_NAME }}"
         state: absent
         force_kill: yes
 
-    - name: Run container with latest image
+    - name: Run new container with pulled image
       docker_container:
         name: "{{ CONTAINER_NAME }}"
         image: "{{ IMAGE }}"
