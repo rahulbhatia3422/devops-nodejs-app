@@ -4,12 +4,11 @@
   become: yes
 
   vars:
-    IMAGE: "rahul0315/devops-nodejs-app:{{ GIT_COMMIT | truncate(7, True, '') | default('latest')"
+    IMAGE: "rahul0315/devops-nodejs-app:{{ (GIT_COMMIT | default('latest'))[:7] }}"
     CONTAINER_NAME: devops-app
     APP_PORT: 3000
 
   tasks:
-
     - name: Check if Docker is already installed
       shell: docker --version
       register: docker_installed
@@ -61,10 +60,10 @@
         enabled: yes
 
     - name: Remove existing container if exists
-      shell: docker rm -f {{ CONTAINER_NAME }} || true
+      shell: "docker rm -f {{ CONTAINER_NAME }} || true"
 
     - name: Pull image
-      shell: docker pull {{ IMAGE }}
+      shell: "docker pull {{ IMAGE }}"
 
     - name: Run container with 80:3000 mapping
-      shell: docker run -d --name {{ CONTAINER_NAME }} -p 80:{{ APP_PORT }} {{ IMAGE }}
+      shell: "docker run -d --name {{ CONTAINER_NAME }} -p 80:{{ APP_PORT }} {{ IMAGE }}"
