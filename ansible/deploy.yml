@@ -4,7 +4,7 @@
   become: yes
 
   vars:
-    IMAGE: "rahul0315/devops-nodejs-app:{{ GIT_COMMIT | default('latest') }}"
+    IMAGE: "rahul0315/devops-nodejs-app:{{ GIT_COMMIT | truncate(7, True, '') | default('latest')
     CONTAINER_NAME: devops-app
     APP_PORT: 3000
 
