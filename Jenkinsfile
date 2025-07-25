@@ -6,13 +6,19 @@ pipeline {
     }
 
     stages {
+
         stage('Clone Repository') {
             steps {
                 git branch: 'develop', 
-                url: 'https://github.com/rahulbhatia3422/devops-nodejs-app.git'
+                    url: 'https://github.com/rahulbhatia3422/devops-nodejs-app.git'
+            }
+        }
+
+        stage('Set Git Commit Hash') {
+            steps {
                 script {
-                    // Store Git commit hash right after cloning
                     env.GIT_COMMIT = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+                    echo "Using Git Commit: ${env.GIT_COMMIT}"
                 }
             }
         }
@@ -38,6 +44,7 @@ pipeline {
             steps {
                 script {
                     sh 'docker buildx install || true'
+
                     withCredentials([
                         usernamePassword(
                             credentialsId: 'dockerhub-credentials',
@@ -46,8 +53,13 @@ pipeline {
                         )
                     ]) {
                         sh '''
+                            echo "Logging into DockerHub..."
                             docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+
+                            echo "Making script executable..."
                             chmod +x scripts/build_and_push.sh
+
+                            echo "Building and pushing Docker image with tag: ${GIT_COMMIT}"
                             ./scripts/build_and_push.sh ${GIT_COMMIT}
                         '''
                     }
@@ -58,15 +70,15 @@ pipeline {
         stage('Prepare Ansible') {
             steps {
                 script {
-                    // Get EC2 public IP from Terraform
                     env.EC2_IP = sh(
                         script: "cd infra && terraform output -raw public_ip", 
                         returnStdout: true
                     ).trim()
 
-                    // Create ansible directory and hosts.ini
-                    sh 'mkdir -p ansible'
+                    echo "EC2 Public IP: ${env.EC2_IP}"
 
+                    // Prepare inventory file
+                    sh 'mkdir -p ansible'
                     writeFile file: 'ansible/hosts.ini', text: """
 [ec2]
 ${env.EC2_IP} ansible_user=ubuntu
@@ -93,6 +105,8 @@ ansible_ssh_common_args='-o StrictHostKeyChecking=no'
                                 mkdir -p ~/.ssh
                                 chmod 600 $SSH_KEY_PATH
                                 ssh-keyscan -H ${env.EC2_IP} >> ~/.ssh/known_hosts
+
+                                echo "Running Ansible Playbook with GIT_COMMIT=${env.GIT_COMMIT}"
                                 ansible-playbook -i ansible/hosts.ini ansible/deploy.yml \
                                     --private-key=$SSH_KEY_PATH \
                                     -u ubuntu \
