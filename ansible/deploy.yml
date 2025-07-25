@@ -5,42 +5,66 @@
 
   vars:
     IMAGE: "rahul0315/devops-nodejs-app:{{ GIT_COMMIT | default('latest') }}"
-    CONTAINER_NAME: devops-app
+    CONTAINER_NAME: "devops-app"
     APP_PORT: 3000
 
   tasks:
-    # COMPLETE CLEANUP OF EXISTING DOCKER INSTALLATION
-    - name: Remove all Docker packages
-      apt:
-        name:
-          - docker-ce
-          - docker-ce-cli
-          - containerd.io
-          - docker-buildx-plugin
-          - docker-compose-plugin
-        state: absent
-        purge: yes
+    # ===== ENSURE CLEAN SLATE ===== #
+    - name: Check for existing Docker installation
+      command: docker --version
+      register: docker_check
       ignore_errors: yes
+      changed_when: false
 
-    - name: Remove all Docker repository configurations
-      file:
-        path: "/etc/apt/sources.list.d/{{ item }}"
-        state: absent
-      loop:
-        - docker.list
-        - docker.list.save
-        - docker.list.dpkg-dist
-        - docker.list.dpkg-old
-      ignore_errors: yes
+    - name: Full Docker cleanup (if detected)
+      block:
+        - name: Stop all running containers
+          shell: |
+            docker stop $(docker ps -aq) || true
+            docker rm $(docker ps -aq) || true
+          ignore_errors: yes
 
-    - name: Remove Docker GPG key
-      file:
-        path: "/etc/apt/keyrings/docker.gpg"
-        state: absent
-      ignore_errors: yes
+        - name: Purge Docker packages
+          apt:
+            name:
+              - docker-ce
+              - docker-ce-cli
+              - containerd.io
+              - docker-buildx-plugin
+              - docker-compose-plugin
+              - docker.io
+            state: absent
+            purge: yes
+            autoremove: yes
+          ignore_errors: yes
 
-    # FRESH INSTALLATION BEGINS HERE
-    - name: Update apt package index
+        - name: Remove residual configs
+          find:
+            paths:
+              - /etc/apt/sources.list.d
+              - /etc/apt/keyrings
+            patterns: "docker*"
+          register: docker_configs
+
+        - name: Delete found config files
+          file:
+            path: "{{ item.path }}"
+            state: absent
+          loop: "{{ docker_configs.files }}"
+          ignore_errors: yes
+
+        - name: Clean Docker directories
+          file:
+            path: "{{ item }}"
+            state: absent
+          loop:
+            - /var/lib/docker
+            - /var/lib/containerd
+          ignore_errors: yes
+      when: docker_check.rc == 0
+
+    # ===== DOCKER INSTALLATION ===== #
+    - name: Update package index
       apt:
         update_cache: yes
         cache_valid_time: 3600
@@ -48,35 +72,40 @@
     - name: Install prerequisites
       apt:
         name:
-          - apt-transport-https
           - ca-certificates
           - curl
           - gnupg
           - lsb-release
           - software-properties-common
-        state: present
+        state: latest
 
-    - name: Create directory for Docker GPG key
-      file:
-        path: /etc/apt/keyrings
-        state: directory
-        mode: '0755'
+    - name: Setup Docker GPG key
+      block:
+        - name: Ensure keyring directory
+          file:
+            path: /etc/apt/keyrings
+            state: directory
+            mode: '0755'
 
-    - name: Add Docker's official GPG key (alternative method)
-      shell: |
-        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | \
-        gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-      args:
-        creates: /etc/apt/keyrings/docker.gpg
+        - name: Download and install key
+          shell: |
+            curl -fsSL https://download.docker.com/linux/ubuntu/gpg | \
+            gpg --dearmor -o /etc/apt/keyrings/docker.gpg && \
+            chmod a+r /etc/apt/keyrings/docker.gpg
+          args:
+            creates: /etc/apt/keyrings/docker.gpg
 
-    - name: Set up Docker repository (direct file method)
+    - name: Configure Docker repository
       copy:
         dest: /etc/apt/sources.list.d/docker.list
         content: |
-          deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable
+          deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] \
+          https://download.docker.com/linux/ubuntu \
+          {{ ansible_distribution_release }} stable
         mode: '0644'
+        validate: 'grep -q "signed-by" %s'
 
-    - name: Install Docker Engine
+    - name: Install Docker components
       apt:
         name:
           - docker-ce
@@ -86,44 +115,76 @@
           - docker-compose-plugin
         state: latest
         update_cache: yes
+        install_recommends: no
+
+    - name: Configure Docker daemon
+      copy:
+        dest: /etc/docker/daemon.json
+        content: |
+          {
+            "log-driver": "json-file",
+            "log-opts": {
+              "max-size": "10m",
+              "max-file": "3"
+            }
+          }
+        mode: '0644'
 
     - name: Ensure Docker is running
-      service:
+      systemd:
         name: docker
         state: started
         enabled: yes
+        daemon_reload: yes
 
-    # CONTAINER DEPLOYMENT
-    - name: Try pulling tagged Docker image (with fallback)
-      block:
-        - name: Pull Docker image with tag
-          docker_image:
-            name: "{{ IMAGE }}"
-            source: pull
-      rescue:
-        - name: Log warning and pull latest instead
-          debug:
-            msg: "Tag {{ IMAGE }} not found. Pulling latest..."
-        - name: Pull latest tag as fallback
-          docker_image:
-            name: "rahul0315/devops-nodejs-app:latest"
-            source: pull
-        - set_fact:
-            IMAGE: "rahul0315/devops-nodejs-app:latest"
+    # ===== APPLICATION DEPLOYMENT ===== #
+    - name: Pull application image
+      docker_image:
+        name: "{{ IMAGE }}"
+        source: pull
+      register: image_pull
+      retries: 3
+      delay: 5
+      until: image_pull is success
+      ignore_errors: yes
 
-    - name: Stop and remove old container if exists
+    - name: Fallback to latest image
+      docker_image:
+        name: "rahul0315/devops-nodejs-app:latest"
+        source: pull
+      when: image_pull is failed
+      register: fallback_pull
+
+    - name: Set final image name
+      set_fact:
+        IMAGE: >-
+          {% if image_pull is failed and fallback_pull is success %}
+          rahul0315/devops-nodejs-app:latest
+          {% else %}
+          {{ IMAGE }}
+          {% endif %}
+
+    - name: Remove existing container
       docker_container:
         name: "{{ CONTAINER_NAME }}"
         state: absent
         force_kill: yes
+        stop_timeout: 30
 
-    - name: Run new container with pulled image
+    - name: Deploy application container
       docker_container:
         name: "{{ CONTAINER_NAME }}"
         image: "{{ IMAGE }}"
         state: started
-        restart_policy: always
+        restart_policy: unless-stopped
         ports:
           - "80:{{ APP_PORT }}"
         env:
-          NODE_ENV: production
+          NODE_ENV: "production"
+        log_driver: json-file
+        log_options:
+          max-size: "10m"
+          max-file: "3"
+        volumes:
+          - "/etc/timezone:/etc/timezone:ro"
+          - "/etc/localtime:/etc/localtime:ro"
