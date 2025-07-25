@@ -13,9 +13,9 @@
     - name: Check if Docker is already installed
       shell: docker --version
       register: docker_installed
-      ignore_errors: yes
+      ignore_errors: true
 
-    - name: Install dependencies for Docker (only if not installed)
+    - name: Install apt dependencies
       apt:
         name:
           - ca-certificates
@@ -26,34 +26,24 @@
         update_cache: yes
       when: docker_installed.rc != 0
 
-    - name: Create directory for Docker GPG key
-      file:
-        path: /etc/apt/keyrings
-        state: directory
-        mode: '0755'
-      when: docker_installed.rc != 0
-
-    - name: Add Docker GPG key
-      shell: |
-        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-      args:
-        creates: /etc/apt/keyrings/docker.gpg
-      when: docker_installed.rc != 0
-
-    - name: Add Docker repository (force jammy for noble)
-      apt_repository:
-        repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu jammy stable"
+    - name: Add Docker's GPG key (secure method)
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
         state: present
-        filename: docker
       when: docker_installed.rc != 0
 
-    - name: Update APT after adding Docker repo
+    - name: Add Docker APT repository (use jammy even on noble)
+      apt_repository:
+        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu jammy stable"
+        state: present
+      when: docker_installed.rc != 0
+
+    - name: Update APT cache
       apt:
         update_cache: yes
-        force_apt_get: yes
       when: docker_installed.rc != 0
 
-    - name: Install Docker engine
+    - name: Install Docker
       apt:
         name:
           - docker-ce
@@ -64,17 +54,17 @@
         state: latest
       when: docker_installed.rc != 0
 
-    - name: Ensure Docker service is started
+    - name: Ensure Docker is running
       service:
         name: docker
         state: started
         enabled: yes
 
-    - name: Remove existing container if it exists
+    - name: Remove existing container if exists
       shell: docker rm -f {{ CONTAINER_NAME }} || true
 
-    - name: Pull latest image from Docker Hub
+    - name: Pull image
       shell: docker pull {{ IMAGE }}
 
-    - name: Run container with port mapping 80:3000
+    - name: Run container with 80:3000 mapping
       shell: docker run -d --name {{ CONTAINER_NAME }} -p 80:{{ APP_PORT }} {{ IMAGE }}
