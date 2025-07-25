@@ -4,7 +4,7 @@
   become: yes
 
   vars:
-    IMAGE: "rahul0315/devops-nodejs-app:{{ GIT_COMMIT | truncate(7, True, '') | default('latest')
+    IMAGE: "rahul0315/devops-nodejs-app:{{ GIT_COMMIT | truncate(7, True, '') | default('latest')"
     CONTAINER_NAME: devops-app
     APP_PORT: 3000
 
@@ -34,7 +34,7 @@
 
     - name: Add Docker APT repository (use jammy even on noble)
       apt_repository:
-        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu jammy stable"
+        repo: 'deb [arch=amd64] https://download.docker.com/linux/ubuntu jammy stable'
         state: present
       when: docker_installed.rc != 0
 
