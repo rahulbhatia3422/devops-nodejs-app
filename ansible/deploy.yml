@@ -3,9 +3,9 @@
   hosts: ec2
   become: yes
   vars:
-    IMAGE: "rahul0315/devops-nodejs-app:{{ GIT_COMMIT }}"
+    IMAGE: "rahul0315/devops-nodejs-app:{{ GIT_COMMIT | default('latest') }}"
     CONTAINER_NAME: devops-app
-    APP_PORT: 3000  # Internal container port
+    APP_PORT: 3000
   tasks:
 
     - name: Update APT packages
@@ -64,4 +64,6 @@
         state: started
         restart_policy: always
         ports:
-          - "80:{{ APP_PORT }}"  # Maps host port 80 to container port 3000
+          - "80:{{ APP_PORT }}"
+        env:
+          NODE_ENV: production
