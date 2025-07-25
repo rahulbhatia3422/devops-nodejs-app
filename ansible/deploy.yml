@@ -9,55 +9,72 @@
     APP_PORT: 3000
 
   tasks:
-    - name: Clean up any existing Docker repository files
+    # COMPLETE CLEANUP OF EXISTING DOCKER INSTALLATION
+    - name: Remove all Docker packages
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
+        state: absent
+        purge: yes
+      ignore_errors: yes
+
+    - name: Remove all Docker repository configurations
       file:
         path: "/etc/apt/sources.list.d/{{ item }}"
         state: absent
       loop:
         - docker.list
         - docker.list.save
+        - docker.list.dpkg-dist
+        - docker.list.dpkg-old
+      ignore_errors: yes
 
-    - name: Update APT package cache
+    - name: Remove Docker GPG key
+      file:
+        path: "/etc/apt/keyrings/docker.gpg"
+        state: absent
+      ignore_errors: yes
+
+    # FRESH INSTALLATION BEGINS HERE
+    - name: Update apt package index
       apt:
         update_cache: yes
-        force_apt_get: yes
-      ignore_errors: yes
-      register: apt_update
-      changed_when: "'apt-get update' not in apt_update.stderr"
+        cache_valid_time: 3600
 
-    - name: Install required system packages
+    - name: Install prerequisites
       apt:
-        name: "{{ item }}"
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+          - software-properties-common
         state: present
-      loop:
-        - apt-transport-https
-        - ca-certificates
-        - curl
-        - gnupg
-        - lsb-release
 
-    - name: Ensure directory for keyring exists
+    - name: Create directory for Docker GPG key
       file:
         path: /etc/apt/keyrings
         state: directory
         mode: '0755'
 
-    - name: Add Docker's official GPG key
-      get_url:
-        url: https://download.docker.com/linux/ubuntu/gpg
-        dest: /etc/apt/keyrings/docker.gpg
-        mode: '0644'
-        force: yes
+    - name: Add Docker's official GPG key (alternative method)
+      shell: |
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | \
+        gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+      args:
+        creates: /etc/apt/keyrings/docker.gpg
 
-    - name: Set up the Docker repository
-      apt_repository:
-        repo: >
-          deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg]
-          https://download.docker.com/linux/ubuntu
-          {{ ansible_distribution_release }} stable
-        state: present
-        filename: docker
-        update_cache: yes
+    - name: Set up Docker repository (direct file method)
+      copy:
+        dest: /etc/apt/sources.list.d/docker.list
+        content: |
+          deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable
+        mode: '0644'
 
     - name: Install Docker Engine
       apt:
@@ -76,6 +93,7 @@
         state: started
         enabled: yes
 
+    # CONTAINER DEPLOYMENT
     - name: Try pulling tagged Docker image (with fallback)
       block:
         - name: Pull Docker image with tag
