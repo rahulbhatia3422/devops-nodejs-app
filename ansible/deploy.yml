@@ -9,11 +9,21 @@
     APP_PORT: 3000
 
   tasks:
+    - name: Clean up any existing Docker repository files
+      file:
+        path: "/etc/apt/sources.list.d/{{ item }}"
+        state: absent
+      loop:
+        - docker.list
+        - docker.list.save
 
     - name: Update APT package cache
       apt:
         update_cache: yes
         force_apt_get: yes
+      ignore_errors: yes
+      register: apt_update
+      changed_when: "'apt-get update' not in apt_update.stderr"
 
     - name: Install required system packages
       apt:
@@ -26,23 +36,37 @@
         - gnupg
         - lsb-release
 
-    - name: Add Docker’s official GPG key
+    - name: Ensure directory for keyring exists
+      file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '0755'
+
+    - name: Add Docker's official GPG key
       get_url:
         url: https://download.docker.com/linux/ubuntu/gpg
         dest: /etc/apt/keyrings/docker.gpg
         mode: '0644'
+        force: yes
 
     - name: Set up the Docker repository
       apt_repository:
         repo: >
-          deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] 
-          https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable
+          deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg]
+          https://download.docker.com/linux/ubuntu
+          {{ ansible_distribution_release }} stable
         state: present
         filename: docker
+        update_cache: yes
 
     - name: Install Docker Engine
       apt:
-        name: docker-ce
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
         state: latest
         update_cache: yes
 
