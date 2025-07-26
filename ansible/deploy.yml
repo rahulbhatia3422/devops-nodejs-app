@@ -9,6 +9,7 @@
     APP_PORT: 3000
 
   tasks:
+
     - name: Check if Docker is already installed
       shell: docker --version
       register: docker_installed
@@ -25,19 +26,19 @@
         update_cache: yes
       when: docker_installed.rc != 0
 
-    - name: Add Docker's GPG key (secure method)
+    - name: Add Docker's GPG key
       apt_key:
         url: https://download.docker.com/linux/ubuntu/gpg
         state: present
       when: docker_installed.rc != 0
 
-    - name: Add Docker APT repository (use jammy even on noble)
+    - name: Add Docker APT repository
       apt_repository:
         repo: 'deb [arch=amd64] https://download.docker.com/linux/ubuntu jammy stable'
         state: present
       when: docker_installed.rc != 0
 
-    - name: Update APT cache
+    - name: Update APT cache again
       apt:
         update_cache: yes
       when: docker_installed.rc != 0
@@ -62,23 +63,22 @@
     - name: Remove existing container if exists
       shell: "docker rm -f {{ CONTAINER_NAME }} || true"
 
-    - name: Pull image
+    - name: Pull Docker image
       shell: "docker pull {{ IMAGE }}"
 
-    - name: Run container with 80:3000 mapping
+    - name: Run Docker container
       shell: "docker run -d --name {{ CONTAINER_NAME }} -p 80:{{ APP_PORT }} {{ IMAGE }}"
 
-          # --- Cleanup Task ---
-    - name: Copy cleanup script to EC2
+    # --- CLEANUP SECTION STARTS HERE ---
+    - name: Copy cleanup.sh script to EC2
       copy:
-        src: "../../scripts/cleanup.sh"  
-        dest: "/tmp/docker-cleanup"
+        src: ../scripts/cleanup.sh
+        dest: /home/ubuntu/cleanup.sh
         mode: '0755'
 
-    - name: Execute cleanup on EC2
-      shell: "/tmp/docker-cleanup"
+    - name: Run cleanup.sh script on EC2
+      shell: bash /home/ubuntu/cleanup.sh
       register: cleanup_result
-      changed_when: false
 
     - name: Show cleanup logs
       debug:
