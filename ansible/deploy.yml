@@ -67,3 +67,19 @@
 
     - name: Run container with 80:3000 mapping
       shell: "docker run -d --name {{ CONTAINER_NAME }} -p 80:{{ APP_PORT }} {{ IMAGE }}"
+
+          # --- Cleanup Task ---
+    - name: Copy cleanup script to EC2
+      copy:
+        src: "../../scripts/cleanup.sh"  
+        dest: "/tmp/docker-cleanup"
+        mode: '0755'
+
+    - name: Execute cleanup on EC2
+      shell: "/tmp/docker-cleanup"
+      register: cleanup_result
+      changed_when: false
+
+    - name: Show cleanup logs
+      debug:
+        msg: "{{ cleanup_result.stdout_lines }}"
