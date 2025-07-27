@@ -213,10 +213,10 @@ app.get('/', (req, res) => {
           <div class="visit-count">Visits: ${Math.floor(Math.random() * 1000)}</div>
           <div class="server-info">Server: http://localhost:${port}</div>
           <div class="social-links">
-            <a href="https://www.linkedin.com/in/yourprofile" target="_blank" class="social-icon">
+            <a href="https://www.linkedin.com/in/rahul-bhatia-6ba321207/" target="_blank" class="social-icon">
               <i class="fab fa-linkedin"></i>
             </a>
-            <a href="https://github.com/yourusername" target="_blank" class="social-icon">
+            <a href="https://github.com/rahulbhatia3422" target="_blank" class="social-icon">
               <i class="fab fa-github"></i>
             </a>
           </div>
