@@ -11,6 +11,7 @@ app.get('/', (req, res) => {
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <title>DevOps Node.js App</title>
       <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
       <style>
         :root {
           --primary: #4361ee;
@@ -101,6 +102,10 @@ app.get('/', (req, res) => {
           text-align: left;
         }
         
+        .description strong {
+          color: var(--secondary);
+        }
+        
         .tech-stack {
           display: flex;
           justify-content: center;
@@ -132,6 +137,8 @@ app.get('/', (req, res) => {
           display: flex;
           justify-content: space-between;
           align-items: center;
+          flex-wrap: wrap;
+          gap: 15px;
         }
         
         .visit-count {
@@ -147,14 +154,28 @@ app.get('/', (req, res) => {
           gap: 15px;
         }
         
-        .social-link {
+        .social-icon {
           color: var(--primary);
-          transition: transform 0.3s ease;
+          font-size: 1.2rem;
+          transition: all 0.3s ease;
         }
         
-        .social-link:hover {
-          color: var(--accent);
-          transform: translateY(-2px);
+        .social-icon:hover {
+          transform: translateY(-3px) scale(1.1);
+        }
+        
+        .fa-linkedin:hover {
+          color: #0a66c2;
+        }
+        
+        .fa-github:hover {
+          color: #333;
+        }
+        
+        .server-info {
+          background: var(--light);
+          padding: 0.3rem 0.8rem;
+          border-radius: 50px;
         }
       </style>
     </head>
@@ -168,19 +189,19 @@ app.get('/', (req, res) => {
         <p class="description">
           This application demonstrates a complete DevOps workflow featuring:
           <br><br>
-          • <strong>CI/CD Pipeline</strong> with Jenkins<br>
+          • <strong>CI/CD Pipeline</strong> with Jenkins/GitHub Actions<br>
           • <strong>Containerization</strong> using Docker<br>
           • <strong>Infrastructure as Code</strong> with Terraform<br>
           • <strong>Configuration Management</strong> via Ansible<br>
           • <strong>Cloud Deployment</strong> on AWS<br>
-          • <strong>Version Control</strong> with Git and Github<br>
+          • <strong>Version Control</strong> with Git and GitHub
         </p>
         
         <div class="tech-stack">
           <span class="tech-item">Node.js</span>
           <span class="tech-item">Express</span>
           <span class="tech-item">Git</span>
-          <span class="tech-item">Github</span>
+          <span class="tech-item">GitHub</span>
           <span class="tech-item">Docker</span>
           <span class="tech-item">Terraform</span>
           <span class="tech-item">Ansible</span>
@@ -190,11 +211,14 @@ app.get('/', (req, res) => {
         
         <div class="footer">
           <div class="visit-count">Visits: ${Math.floor(Math.random() * 1000)}</div>
-          <div>Server: http://localhost:${port}</div>
+          <div class="server-info">Server: http://localhost:${port}</div>
           <div class="social-links">
-            <a href="https://www.linkedin.com/in/rahul-bhatia-6ba321207/" class="social-link">LinkedIn</a>
-            <a href="https://github.com/rahulbhatia3422" class="social-link">GitHub</a>
-    
+            <a href="https://www.linkedin.com/in/yourprofile" target="_blank" class="social-icon">
+              <i class="fab fa-linkedin"></i>
+            </a>
+            <a href="https://github.com/yourusername" target="_blank" class="social-icon">
+              <i class="fab fa-github"></i>
+            </a>
           </div>
         </div>
       </div>
@@ -204,5 +228,5 @@ app.get('/', (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`App running at http://localhost:${port}`);
+  console.log(`🌟 App running at http://localhost:${port}`);
 });
