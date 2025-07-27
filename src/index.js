@@ -189,7 +189,7 @@ app.get('/', (req, res) => {
         <p class="description">
           This application demonstrates a complete DevOps workflow featuring:
           <br><br>
-          • <strong>CI/CD Pipeline</strong> with Jenkins/GitHub Actions<br>
+          • <strong>CI/CD Pipeline</strong> with Jenkins<br>
           • <strong>Containerization</strong> using Docker<br>
           • <strong>Infrastructure as Code</strong> with Terraform<br>
           • <strong>Configuration Management</strong> via Ansible<br>
@@ -228,5 +228,5 @@ app.get('/', (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`🌟 App running at http://localhost:${port}`);
+  console.log(`App running at http://localhost:${port}`);
 });
