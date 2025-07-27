@@ -168,19 +168,20 @@ app.get('/', (req, res) => {
         <p class="description">
           This application demonstrates a complete DevOps workflow featuring:
           <br><br>
-          • <strong>CI/CD Pipeline</strong> with Jenkins/GitHub Actions<br>
+          • <strong>CI/CD Pipeline</strong> with Jenkins<br>
           • <strong>Containerization</strong> using Docker<br>
           • <strong>Infrastructure as Code</strong> with Terraform<br>
           • <strong>Configuration Management</strong> via Ansible<br>
-          • <strong>Cloud Deployment</strong> on AWS/GCP<br>
-          • <strong>Monitoring</strong> with Prometheus & Grafana
+          • <strong>Cloud Deployment</strong> on AWS<br>
+          • <strong>Version Control</strong> with Git and Github<br>
         </p>
         
         <div class="tech-stack">
           <span class="tech-item">Node.js</span>
           <span class="tech-item">Express</span>
+          <span class="tech-item">Git</span>
+          <span class="tech-item">Github</span>
           <span class="tech-item">Docker</span>
-          <span class="tech-item">Kubernetes</span>
           <span class="tech-item">Terraform</span>
           <span class="tech-item">Ansible</span>
           <span class="tech-item">AWS</span>
@@ -191,7 +192,7 @@ app.get('/', (req, res) => {
           <div class="visit-count">Visits: ${Math.floor(Math.random() * 1000)}</div>
           <div>Server: http://localhost:${port}</div>
           <div class="social-links">
-            <a href="#" class="social-link">LinkedIn</a>
+            <a href="" class="social-link">LinkedIn</a>
             <a href="#" class="social-link">GitHub</a>
             <a href="#" class="social-link">Twitter</a>
           </div>
