@@ -57,14 +57,28 @@ This report documents the implementation of a fully automated DevOps CI/CD pipel
 cd infra
 terraform init
 terraform apply -auto-approve
+```
+![Infrastructure(ec2)](assets/infrastructure.png)
 
 ---
 
 ## 4️⃣ Pipeline Execution (Jenkins)
 
 - Jenkins was used to automate the CI/CD process.
-- [View Jenkinsfile here](link)
 - Stages: checkout, build, terraform, deploy
 - Screenshot:
+  
 ![pipeline](assets/jenkins_pipeline.png)
+
+---
+
+## 5️⃣ Web Application Output
+
+This is the final output of the deployed Node.js web application running on the AWS EC2 instance. The application was accessed via the public IP on port 80 after successful deployment using Jenkins, Terraform, Docker, and Ansible.
+
+📷 **Deployed App Screenshot**  
+![Web App Output](assets/web_app_output.png)
+
+
+
 
