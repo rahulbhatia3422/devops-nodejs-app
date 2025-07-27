@@ -57,3 +57,14 @@ This report documents the implementation of a fully automated DevOps CI/CD pipel
 cd infra
 terraform init
 terraform apply -auto-approve
+
+---
+
+## 4️⃣ Pipeline Execution (Jenkins)
+
+- Jenkins was used to automate the CI/CD process.
+- [View Jenkinsfile here](link)
+- Stages: checkout, build, terraform, deploy
+- Screenshot:
+![pipeline](assets/jenkins_pipeline.png)
+
