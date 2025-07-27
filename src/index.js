@@ -192,9 +192,9 @@ app.get('/', (req, res) => {
           <div class="visit-count">Visits: ${Math.floor(Math.random() * 1000)}</div>
           <div>Server: http://localhost:${port}</div>
           <div class="social-links">
-            <a href="" class="social-link">LinkedIn</a>
-            <a href="#" class="social-link">GitHub</a>
-            <a href="#" class="social-link">Twitter</a>
+            <a href="https://www.linkedin.com/in/rahul-bhatia-6ba321207/" class="social-link">LinkedIn</a>
+            <a href="https://github.com/rahulbhatia3422" class="social-link">GitHub</a>
+    
           </div>
         </div>
       </div>
@@ -204,5 +204,5 @@ app.get('/', (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`🌟 App running at http://localhost:${port}`);
+  console.log(`App running at http://localhost:${port}`);
 });
