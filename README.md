@@ -29,6 +29,8 @@ This project demonstrates a **complete DevOps pipeline** that builds, tests, pro
 
 ---
 
-## 🏗️ Architecture Diagram
+## 1️⃣ Architecture Diagram
+
+![DevOps Architecture](assets/architecture_diagram.png)
 
 
