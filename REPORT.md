@@ -15,8 +15,6 @@ This report documents the implementation of a fully automated DevOps CI/CD pipel
 
 ## 1️⃣ Architecture Diagram
 
-[Click here to view the architecture diagram](assets/architecture_diagram.png)
-
 ![DevOps Architecture](assets/architecture_diagram.png)
 
 **Flow Summary:**
@@ -58,7 +56,7 @@ cd infra
 terraform init
 terraform apply -auto-approve
 ```
-![Infrastructure(ec2)](assets/infrastructure.png)
+![Infrastructure(ec2)](assets/infrastructure.jpg)
 
 ---
 
@@ -68,7 +66,7 @@ terraform apply -auto-approve
 - Stages: checkout, build, terraform, deploy
 - Screenshot:
   
-![pipeline](assets/jenkins_pipeline.png)
+![pipeline](assets/jenkins_pipeline.jpg)
 
 ---
 
@@ -77,7 +75,7 @@ terraform apply -auto-approve
 This is the final output of the deployed Node.js web application running on the AWS EC2 instance. The application was accessed via the public IP on port 80 after successful deployment using Jenkins, Terraform, Docker, and Ansible.
 
 📷 **Deployed App Screenshot**  
-![Web App Output](assets/web_app_output.png)
+![Web App Output](assets/web_app_output.jpg)
 
 
 
