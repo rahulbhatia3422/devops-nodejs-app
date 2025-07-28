@@ -33,4 +33,10 @@ This project demonstrates a **complete DevOps pipeline** that builds, tests, pro
 
 ![DevOps Architecture](assets/architecture_diagram.png)
 
+---
+
+# 2️⃣ Web Application UI
+
+![Web App Output](assets/web_app_output.jpg)
+
 
