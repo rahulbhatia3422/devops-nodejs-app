@@ -1,6 +1,6 @@
 # 🚀 DevOps CI/CD Pipeline for Node.js App
 
-This project demonstrates a **complete DevOps pipeline** that builds, tests, provisions, configures, and deploys a simple Node.js web application on **AWS Free Tier**, using tools like Git, Docker, Jenkins, Terraform, and Ansible.
+This project demonstrates a **complete DevOps pipeline** that builds, tests, provisions, configures, and deploys a simple Node.js web application on **AWS Free Tier**, using tools like Git, Github,  Docker, Dockerhub, Jenkins, Terraform, and Ansible.
 
 🔗 **GitHub Repo URL**: [https://github.com/rahulbhatia3422/devops-nodejs-app](https://github.com/rahulbhatia3422/devops-nodejs-app)
 
